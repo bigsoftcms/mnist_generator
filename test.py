@@ -31,9 +31,22 @@ for i in range(12, len(layers)):
 model = Model(inputs=inputs, outputs=net)
 model.summary()
 
-input_seed = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+def corrupted_logits(size, num=None):
+  logits = []
+  if num is None:
+    num = np.random.randint(10, size=size)
+  for i in range(size):
+    logit = np.abs(np.random.logistic(0, 0.0005, 10))
+    logit[num[i]] = 0.0
+    answer = 1 - sum(logit)
+    logit[num[i]] = answer
+    logits.append(logit)
+  return np.array(logits)
 
-pred = model.predict([keras.utils.to_categorical(input_seed, 10)])
+input_logits = corrupted_logits(10)
+input_seed = np.argmax(input_logits, axis=1)
+
+pred = model.predict([input_logits])
 
 plt.figure(figsize=(10, 4), dpi=100)
 n = len(pred)
