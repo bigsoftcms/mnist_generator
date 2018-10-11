@@ -53,6 +53,7 @@ autoencoder.compile(
 )
 
 autoencoder.summary()
+keras.utils.plot_model(autoencoder, to_file='model.png')
 
 # load mnist dataset
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
