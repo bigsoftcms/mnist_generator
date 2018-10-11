@@ -13,15 +13,18 @@ start_time = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 input_img = Input(shape=(28, 28, 1))
 
 # encoder
-x = Conv2D(32, (3, 3), activation='relu', padding='same')(input_img)
-x = MaxPooling2D((2, 2), padding='same')(x)
-x = Conv2D(32, (3, 3), activation='relu', padding='same')(x)
-x = MaxPooling2D((2, 2), padding='same')(x)
-x = Conv2D(16, (3, 3), activation='relu', padding='same')(x)
-x = MaxPooling2D((2, 2), padding='same')(x)
-x = Conv2D(16, (3, 3), activation='relu', padding='same')(x)
-x = MaxPooling2D((2, 2), padding='same')(x)
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
+x = Conv2D(filters=32, kernel_size=3, padding='same', strides=1, activation='relu')(input_img)
+x = Conv2D(filters=32, kernel_size=3, padding='same', strides=1, activation='relu')(x)
+x = Conv2D(filters=32, kernel_size=3, padding='same', strides=2, activation='relu')(x)
+
+x = Conv2D(filters=16, kernel_size=3, padding='same', strides=1, activation='relu')(x)
+x = Conv2D(filters=16, kernel_size=3, padding='same', strides=1, activation='relu')(x)
+x = Conv2D(filters=16, kernel_size=3, padding='same', strides=2, activation='relu')(x)
+
+x = Conv2D(filters=8, kernel_size=3, padding='same', strides=1, activation='relu')(x)
+x = Conv2D(filters=8, kernel_size=3, padding='same', strides=1, activation='relu')(x)
+x = Conv2D(filters=8, kernel_size=3, padding='same', strides=2, activation='relu')(x)
+
 x = GlobalMaxPooling2D()(x)
 encoded = Dense(10, activation='softmax', name='encoded')(x)
 
