@@ -1,5 +1,5 @@
 import keras, datetime
-from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, GlobalMaxPooling2D, Dense, Reshape, Flatten, Conv2DTranspose
+from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, GlobalMaxPooling2D, Dense, Reshape, Flatten, Conv2DTranspose, Concatenate
 from keras.models import Model
 from keras.datasets import mnist
 from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau
@@ -28,8 +28,14 @@ x = Conv2D(filters=8, kernel_size=3, padding='same', strides=2, activation='relu
 x = GlobalMaxPooling2D()(x)
 encoded = Dense(10, activation='softmax', name='encoded')(x)
 
+random_input = Input(shape=(1,))
+concat = Concatenate(axis=1)([encoded, random_input])
+
+x = Dense(16, activation='relu')(concat)
+x = Dense(32, activation='relu')(x)
+
 # reshape
-x = Reshape((1, 1, 10))(encoded)
+x = Reshape((1, 1, 32))(x)
 
 # decoder
 x = Conv2DTranspose(32, kernel_size=3, padding='same', strides=3, activation='relu')(x)
@@ -38,7 +44,7 @@ x = Conv2DTranspose(16, kernel_size=3, padding='same', strides=2, activation='re
 x = Conv2DTranspose(8, kernel_size=3, padding='same', strides=2, activation='relu')(x)
 decoded = Conv2D(1, (3, 3), activation='sigmoid', padding='same', name='decoded')(x)
 
-autoencoder = Model(input_img, [encoded, decoded])
+autoencoder = Model([input_img, random_input], [encoded, decoded])
 autoencoder.compile(
   optimizer=keras.optimizers.Adam(),
   loss=['categorical_crossentropy', 'binary_crossentropy'],
@@ -59,9 +65,12 @@ x_test = np.reshape(x_test, (len(x_test), 28, 28, 1))
 y_train = keras.utils.to_categorical(y_train, 10)
 y_test = keras.utils.to_categorical(y_test, 10)
 
+r_train = np.random.sample(x_train.shape[0])
+r_test = np.random.sample(x_test.shape[0])
+
 # tensorboard --logdir=logs
-autoencoder.fit(x_train, [y_train, x_train], epochs=50, batch_size=128, shuffle=True,
-  validation_data=(x_test, [y_test, x_test]), verbose=1,
+autoencoder.fit([x_train, r_train], [y_train, x_train], epochs=50, batch_size=128, shuffle=True,
+  validation_data=([x_test, r_test], [y_test, x_test]), verbose=1,
   callbacks=[
     TensorBoard(log_dir='logs/%s' % (start_time)),
     ModelCheckpoint('./models/%s.h5' % (start_time), monitor='val_loss', verbose=1, save_best_only=True, mode='auto'),
@@ -70,7 +79,7 @@ autoencoder.fit(x_train, [y_train, x_train], epochs=50, batch_size=128, shuffle=
 )
 
 # take a look at the reconstructed digits
-pred = autoencoder.predict(x_test)
+pred = autoencoder.predict([x_test, r_test])
 pred_y = pred[0]
 decoded_imgs = pred[1]
 

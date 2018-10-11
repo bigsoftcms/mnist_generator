@@ -18,17 +18,18 @@ layers = [l for l in base_model.layers]
 (_, _), (x_test, y_test) = mnist.load_data()
 
 inputs = Input(shape=(10,))
+random_input = Input(shape=(1,))
 
 net = None
-for i in range(12, len(layers)):
+for i in range(13, len(layers)):
   print(layers[i].name)
-  if i == 12:
-    net = layers[i](inputs)
+  if i == 13:
+    net = layers[i]([inputs, random_input])
   else:
     net = layers[i](net)
 
 # recreate new decoder only model
-model = Model(inputs=inputs, outputs=net)
+model = Model(inputs=[inputs, random_input], outputs=net)
 model.summary()
 
 def corrupted_logits(size, num=None):
@@ -46,7 +47,9 @@ def corrupted_logits(size, num=None):
 input_logits = corrupted_logits(10)
 input_seed = np.argmax(input_logits, axis=1)
 
-pred = model.predict([input_logits])
+r_test = np.random.sample(10)
+
+pred = model.predict([input_logits, r_test])
 
 plt.figure(figsize=(10, 4), dpi=100)
 n = len(pred)
