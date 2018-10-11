@@ -2,7 +2,7 @@ import keras, datetime
 from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, GlobalMaxPooling2D, Dense, Reshape, Flatten, Conv2DTranspose
 from keras.models import Model
 from keras.datasets import mnist
-from keras.callbacks import TensorBoard, ModelCheckpoint
+from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau
 from keras import backend as K
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,16 +29,10 @@ encoded = Dense(10, activation='softmax', name='encoded')(x)
 x = Reshape((1, 1, 10))(encoded)
 
 # decoder
-x = Conv2D(32, (3, 3), activation='relu', padding='same')(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(16, (3, 3), activation='relu', padding='same')(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(16, (3, 3), activation='relu', padding='same')(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(8, (3, 3), activation='relu')(x)
-x = UpSampling2D((2, 2))(x)
+x = Conv2DTranspose(32, kernel_size=3, padding='same', strides=3, activation='relu')(x)
+x = Conv2DTranspose(16, kernel_size=3, padding='valid', strides=2, activation='relu')(x)
+x = Conv2DTranspose(16, kernel_size=3, padding='same', strides=2, activation='relu')(x)
+x = Conv2DTranspose(8, kernel_size=3, padding='same', strides=2, activation='relu')(x)
 decoded = Conv2D(1, (3, 3), activation='sigmoid', padding='same', name='decoded')(x)
 
 autoencoder = Model(input_img, [encoded, decoded])
@@ -67,7 +61,8 @@ autoencoder.fit(x_train, [y_train, x_train], epochs=50, batch_size=128, shuffle=
   validation_data=(x_test, [y_test, x_test]), verbose=1,
   callbacks=[
     TensorBoard(log_dir='logs/%s' % (start_time)),
-    ModelCheckpoint('./models/%s.h5' % (start_time), monitor='val_loss', verbose=1, save_best_only=True, mode='auto')
+    ModelCheckpoint('./models/%s.h5' % (start_time), monitor='val_loss', verbose=1, save_best_only=True, mode='auto'),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=1, mode='auto')
   ]
 )
 
