@@ -1,4 +1,4 @@
-import keras
+import keras, sys
 from keras.models import load_model
 from keras.models import Model
 from keras.datasets import mnist
@@ -6,7 +6,9 @@ from keras.layers import Input
 import numpy as np
 import matplotlib.pyplot as plt
 
-base_model = load_model('./models/upsample.h5')
+model_name = sys.argv[1]
+
+base_model = load_model(model_name)
 
 base_model.summary()
 
@@ -44,10 +46,3 @@ for i, p in enumerate(pred):
   ax.set_axis_off()
 
 plt.show()
-
-# new_model = model.layers[12:]
-# model.layers[12].outbound_nodes = []
-# print(new_model[-1].output)
-
-# decoder_model = Model(inputs=inputs, outputs=new_model[-1].output)
-# decoder_model.summary()
